@@ -73,9 +73,12 @@
     "@grafana/data": "9.2.0",
     "@grafana/runtime": "9.5.2",
     "@grafana/ui": "9.2.0",
+    "@viz-js/lang-dot": "^1.0.4",
+    "@viz-js/viz": "^3.2.4",
     "mermaid": "9.4.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
+    "svg-pan-zoom": "^3.6.1",
     "tslib": "2.5.0"
   },
   "engines": {

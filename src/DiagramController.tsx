@@ -1,15 +1,11 @@
-import { AbsoluteTimeRange, FieldConfigSource, GrafanaTheme2, InterpolateFunction, TimeZone } from '@grafana/data';
-import { CustomScrollbar, VizLegendItem, stylesFactory, VizLegend } from '@grafana/ui';
-import { defaultMermaidOptions } from 'config/diagramDefaults';
-import DiagramErrorBoundary from 'DiagramErrorBoundary';
 import { css } from '@emotion/css';
-import { merge } from 'lodash';
-import mermaid from 'mermaid';
+import { AbsoluteTimeRange, FieldConfigSource, GrafanaTheme2, InterpolateFunction, TimeZone } from '@grafana/data';
+import { CustomScrollbar, VizLegend, VizLegendItem, stylesFactory } from '@grafana/ui';
+import { instance as viz_instance } from '@viz-js/viz';
+import DiagramErrorBoundary from 'DiagramErrorBoundary';
 import React from 'react';
-import { updateDiagramStyle } from 'visualizers/updateDiagramStyle';
+import svgPanZoom from 'svg-pan-zoom';
 import { DiagramOptions, DiagramSeriesModel, DiagramSeriesValue } from './config/types';
-
-const mermaidAPI = mermaid.mermaidAPI;
 
 export interface DiagramPanelControllerProps {
   theme: GrafanaTheme2;
@@ -40,6 +36,7 @@ const getDiagramWithLegendStyles = stylesFactory(({ options }: DiagramPanelContr
   diagramContainer: css`
     min-height: 65%;
     flex-grow: 1;
+    overflow: scroll;
   `,
   legendContainer: css`
     padding: 10px 0;
@@ -76,7 +73,7 @@ export class DiagramPanelController extends React.Component<DiagramPanelControll
   }
 
   componentDidMount() {
-    this.initializeMermaid();
+    this.initVizGraph();
   }
 
   componentDidUpdate(prevProps: DiagramPanelControllerProps) {
@@ -86,42 +83,7 @@ export class DiagramPanelController extends React.Component<DiagramPanelControll
       prevProps.theme !== this.props.theme ||
       prevProps.data !== this.props.data
     ) {
-      this.initializeMermaid();
-    }
-  }
-
-  contentProcessor(content: string): string {
-    const baseTheme = this.props.theme.isDark ? 'dark' : 'base';
-    // check if the diagram definition already contains an init block
-    const match = content.match('%%{.*}%%');
-    // if it does, just return the original content
-    if (match && match.length > 0) {
-      return content;
-    } else {
-      // otherwise inject the variables from the options
-      let overrides;
-      if (this.props.theme.isDark) {
-        overrides = {
-          ...this.props.options.mermaidThemeVariablesDark.common,
-          ...this.props.options.mermaidThemeVariablesDark.classDiagram,
-          ...this.props.options.mermaidThemeVariablesDark.flowChart,
-          ...this.props.options.mermaidThemeVariablesDark.sequenceDiagram,
-          ...this.props.options.mermaidThemeVariablesDark.stateDiagram,
-          ...this.props.options.mermaidThemeVariablesDark.userJourneyDiagram,
-        };
-      } else {
-        overrides = {
-          ...this.props.options.mermaidThemeVariablesLight.common,
-          ...this.props.options.mermaidThemeVariablesLight.classDiagram,
-          ...this.props.options.mermaidThemeVariablesLight.flowChart,
-          ...this.props.options.mermaidThemeVariablesLight.sequenceDiagram,
-          ...this.props.options.mermaidThemeVariablesLight.stateDiagram,
-          ...this.props.options.mermaidThemeVariablesLight.userJourneyDiagram,
-        };
-      }
-
-      const customTheme = `%%{init: {'theme': '${baseTheme}', 'themeVariables': ${JSON.stringify(overrides)}}}%%\n`;
-      return customTheme + content;
+      this.initVizGraph();
     }
   }
 
@@ -138,32 +100,27 @@ export class DiagramPanelController extends React.Component<DiagramPanelControll
     }
   }
 
-  initializeMermaid() {
-    const options = merge({}, defaultMermaidOptions, { theme: this.props.theme.isDark ? 'dark' : 'base' });
-    // mermaidAPI.initialize(options);
-    mermaid.initialize(options);
-    // parseError = this.handleParseError.bind(this);
-    if (this.diagramRef) {
-      this.loadDiagramDefinition().then((diagramDefinition) => {
-        try {
-          const diagramId = `diagram-${this.props.id}`;
-          const interpolated = this.props.replaceVariables(this.contentProcessor(diagramDefinition));
-          // if parsing the graph definition fails, the error handler will be called but the renderCallback() may also still be called.
-          try {
-            this.diagramRef.innerHTML = mermaidAPI.render(diagramId, interpolated, this.renderCallback);
-          } catch (err) {
-            console.log("Trying to apply default theme : ", err);
-            this.diagramRef.innerHTML = mermaidAPI.render(diagramId, diagramDefinition, this.renderCallback);
-          }
-          updateDiagramStyle(this.diagramRef, this.props.data, this.props.options, diagramId);
-          if (this.bindFunctions) {
-            this.bindFunctions(this.diagramRef);
-          }
-        } catch (err) {
-          this.diagramRef.innerHTML = `<div><p>Error rendering diagram. Check the diagram definition</p><p>${err}</p></div>`;
+  initVizGraph() {
+    viz_instance().then((viz) => {
+      if (this.diagramRef) {
+        if (document.querySelector('#graph') == null) {
+          this.loadDiagramDefinition().then((diagramDefinition) => {
+            try {
+              const graph = viz.renderSVGElement(diagramDefinition);
+              graph.id = 'graph';
+              this.diagramRef.appendChild(graph);
+              svgPanZoom('#graph', {
+                zoomEnabled: true,
+                controlIconsEnabled: true,
+              });
+            } catch (error) {
+              console.log(error);
+              this.diagramRef.innerHTML = `<div><p>Error rendering diagram. Check the diagram definition</p><p>${err}</p></div>`;
+            }
+          });
         }
-      });
-    }
+      }
+    });
   }
 
   onToggleSort(sortBy: string) {
