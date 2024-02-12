@@ -1,56 +1,12 @@
-import { FieldConfigProperty, PanelOptionsEditorBuilder, PanelPlugin, SelectableValue } from '@grafana/data';
+import { FieldConfigProperty, PanelPlugin, SelectableValue } from '@grafana/data';
+import { MetricCharacterReplacementEditor } from 'editors/MetricReplacementEditor';
+import { DiagramPanel } from './DiagramPanel';
 import { defaults } from './config/diagramDefaults';
 import { diagramPanelChangeHandler } from './config/diagramPanelChangeHandler';
-import { CompositeMetricEditor } from './editors/CompositeMetricEditor';
 import { diagramPanelMigrationHandler } from './config/diagramPanelMigrationHandler';
 import { DiagramOptions, ValueType } from './config/types';
-import { DiagramPanel } from './DiagramPanel';
+import { CompositeMetricEditor } from './editors/CompositeMetricEditor';
 import { SupportEditor } from './editors/SupportEditor';
-import { MetricCharacterReplacementEditor } from 'editors/MetricReplacementEditor';
-
-interface PanelProperty {
-  key: string;
-  name: string;
-  description: string;
-}
-
-const commonTextKeys: PanelProperty[] = [
-  {
-    key: 'fontFamily',
-    name: 'Font family',
-    description: 'CSS font family',
-  },
-  //{
-  //  key: 'fontSize', name: 'Font Size', description: 'Font size in px'
-  //}
-];
-
-const commonColorKeys: PanelProperty[] = [
-  {
-    key: 'mainBkg',
-    name: 'Shape background color',
-    description: 'Background in flowchart objects like rects/circles, class diagram classes, sequence diagram etc',
-  },
-  {
-    key: 'lineColor',
-    name: 'Line color',
-    description: 'Default color of Lines',
-  },
-  {
-    key: 'textColor',
-    name: 'Text color',
-    description:
-      'Text in diagram over the background for instance text on labels and on signals in sequence diagram or the title in gantt diagram',
-  },
-];
-
-const flowChartKeys: PanelProperty[] = [
-  {
-    key: 'nodeBorder',
-    name: 'Shape border color',
-    description: 'Border color of shapes',
-  },
-];
 
 const statSelectOptions: Array<SelectableValue<ValueType>> = [
   { label: 'mean', value: 'mean', description: 'Use the mean value of all datapoints' },
@@ -59,94 +15,6 @@ const statSelectOptions: Array<SelectableValue<ValueType>> = [
   { label: 'sum', value: 'sum', description: 'Use the summation of all datapoints' },
   { label: 'last', value: 'last', description: 'Use the last datapoint value' },
 ];
-
-const addStyleEditors = (builder: PanelOptionsEditorBuilder<DiagramOptions>) => {
-  // dark common
-  commonTextKeys.forEach((obj) => {
-    builder.addTextInput({
-      name: obj.name,
-      path: `mermaidThemeVariablesDark.common.${obj.key}`,
-      category: ['Style Common: Dark'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesDark.common as any)[obj.key],
-      settings: {},
-    });
-  });
-
-  // light common
-  commonTextKeys.forEach((obj) => {
-    builder.addTextInput({
-      name: obj.name,
-      path: `mermaidThemeVariablesLight.common.${obj.key}`,
-      category: ['Style Common: Light'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesLight.common as any)[obj.key],
-      settings: {},
-    });
-  });
-
-  // dark common
-  commonColorKeys.forEach((obj) => {
-    builder.addColorPicker({
-      name: obj.name,
-      path: `mermaidThemeVariablesDark.common.${obj.key}`,
-      category: ['Style Common: Dark'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesDark.common as any)[obj.key],
-      settings: { disableNamedColors: true, allowUndefined: true, textWhenUndefined: 'default' },
-    });
-  });
-
-  // light common
-  commonColorKeys.forEach((obj) => {
-    builder.addColorPicker({
-      name: obj.name,
-      path: `mermaidThemeVariablesLight.common.${obj.key}`,
-      category: ['Style Common: Light'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesLight.common as any)[obj.key],
-      settings: { disableNamedColors: true, allowUndefined: true, textWhenUndefined: 'default' },
-    });
-  });
-
-  // dark flowchart
-  flowChartKeys.forEach((obj) => {
-    builder.addColorPicker({
-      name: obj.name,
-      path: `mermaidThemeVariablesDark.flowChart.${obj.key}`,
-      category: ['Style FlowChart: Dark'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesDark.flowChart as any)[obj.key],
-      settings: { disableNamedColors: true, allowUndefined: true, textWhenUndefined: 'default' },
-    });
-  });
-
-  // light flowchart
-  flowChartKeys.forEach((obj) => {
-    builder.addColorPicker({
-      name: obj.name,
-      path: `mermaidThemeVariablesLight.flowChart.${obj.key}`,
-      category: ['Style FlowChart: Light'],
-      description: obj.description,
-      defaultValue: (defaults.mermaidThemeVariablesLight.flowChart as any)[obj.key],
-      settings: { disableNamedColors: true, allowUndefined: true, textWhenUndefined: 'default' },
-    });
-  });
-
-  builder.addTextInput({
-    name: 'Custom CSS',
-    path: 'style',
-    category: ['Advanced'],
-    defaultValue: defaults.style,
-    description: 'Applied after other styles and overrides',
-    settings: {
-      useTextarea: true,
-      rows: 10,
-    },
-  });
-
-  return builder;
-};
 
 const createPanelPlugin = () => {
   const plugin = new PanelPlugin<DiagramOptions>(DiagramPanel)
@@ -190,7 +58,7 @@ const createPanelPlugin = () => {
         .addTextInput({
           name: 'Diagram definition',
           path: 'content',
-          description: `This area uses Mermaid syntax - https://mermaid-js.github.io/`,
+          description: `This area uses Viz.js syntax - https://viz-js.com/`,
           defaultValue: defaults.content,
           settings: {
             rows: 10,
@@ -235,8 +103,6 @@ const createPanelPlugin = () => {
           category: ['Advanced'],
           description: 'Match/replace charactes in the metric name',
         });
-
-      builder = addStyleEditors(builder);
 
       // Support
       builder.addCustomEditor({

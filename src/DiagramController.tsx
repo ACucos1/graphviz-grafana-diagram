@@ -113,8 +113,8 @@ export class DiagramPanelController extends React.Component<DiagramPanelControll
                 zoomEnabled: true,
                 controlIconsEnabled: true,
               });
-            } catch (error) {
-              console.log(error);
+            } catch (err) {
+              console.log(err);
               this.diagramRef.innerHTML = `<div><p>Error rendering diagram. Check the diagram definition</p><p>${err}</p></div>`;
             }
           });

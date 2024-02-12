@@ -1,6 +1,5 @@
 import { DisplayValue, Field } from '@grafana/data';
 import { LegendDisplayMode, LegendPlacement } from '@grafana/ui';
-import { MermaidThemeVariables } from './theme';
 
 export type ValueType = 'mean' | 'min' | 'max' | 'sum' | 'last' | 'name';
 export type DiagramPanelMode = 'content' | 'url';
@@ -65,11 +64,8 @@ export interface DiagramOptions {
   content: string;
   contentUrl?: string;
   mode: DiagramPanelMode;
-  mermaidServiceUrl: string;
   useBasicAuth: boolean;
   authUsername: string;
   authPassword: string;
-  mermaidThemeVariablesDark: MermaidThemeVariables;
-  mermaidThemeVariablesLight: MermaidThemeVariables;
   useBackground: boolean;
 }
