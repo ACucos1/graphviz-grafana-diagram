@@ -1,6 +1,6 @@
 {
   "type": "panel",
-  "name": "Diagram",
+  "name": "GraphViz Diagram",
   "id": "alexcucos1-diagram-panel",
   "info": {
     "description": "Display diagrams and charts with colored metric indicators",
@@ -47,8 +47,8 @@
         "path": "img/theme_custom.png"
       }
     ],
-    "version": "1.0.0",
-    "updated": "2024-02-12"
+    "version": "1.7.4",
+    "updated": "2024-02-15"
   },
   "dependencies": {
     "grafanaDependency": "7.x",
