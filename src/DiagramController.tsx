@@ -103,22 +103,25 @@ export class DiagramPanelController extends React.Component<DiagramPanelControll
   initVizGraph() {
     viz_instance().then((viz) => {
       if (this.diagramRef) {
-        if (document.querySelector('#graph') == null) {
-          this.loadDiagramDefinition().then((diagramDefinition) => {
-            try {
-              const graph = viz.renderSVGElement(diagramDefinition);
-              graph.id = 'graph';
-              this.diagramRef.appendChild(graph);
-              svgPanZoom('#graph', {
+        this.loadDiagramDefinition().then((diagramDefinition) => {
+          try {
+            const graph = viz.renderSVGElement(diagramDefinition);
+            graph.classList.add('diagram-svg');
+            this.diagramRef.innerHTML = '';
+            this.diagramRef.appendChild(graph);
+            const svgElements = this.diagramRef.querySelectorAll('.diagram-svg');
+
+            svgElements.forEach((svgElement) => {
+              svgPanZoom(svgElement as HTMLElement, {
                 zoomEnabled: true,
                 controlIconsEnabled: true,
               });
-            } catch (err) {
-              console.log(err);
-              this.diagramRef.innerHTML = `<div><p>Error rendering diagram. Check the diagram definition</p><p>${err}</p></div>`;
-            }
-          });
-        }
+            });
+          } catch (err) {
+            console.log(err);
+            this.diagramRef.innerHTML = `<div><p>Error rendering diagram. Check the diagram definition</p><p>${err}</p></div>`;
+          }
+        });
       }
     });
   }
